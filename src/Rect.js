@@ -1,4 +1,4 @@
-raphaelDOM.Rect = function () {
+Partition.Rect = function () {
     var _degree_to_radian = Math.PI / 180;
     window._f = function _f(n) {
         return Math.round(n * 10) / 10
@@ -60,32 +60,32 @@ raphaelDOM.Rect = function () {
     }, toString: function () {
         return _string(this)
     }, intersect: function (rect) {
-        var r2 = new raphaelDOM.Rect({left: Math.max(this.left, rect.left), right: Math.min(this.right, rect.right), top: Math.max(this.top, rect.top), bottom: Math.min(this.bottom, rect.bottom)});
+        var r2 = new Partition.Rect({left: Math.max(this.left, rect.left), right: Math.min(this.right, rect.right), top: Math.max(this.top, rect.top), bottom: Math.min(this.bottom, rect.bottom)});
         r2.validate();
         return r2
     }, inset: function (inset) {
         inset = _.isObject(inset) ? inset : {value: inset};
-        var left = raphaelDOM.utils.getProp(inset, "left", "width", "value");
-        var right = raphaelDOM.utils.getProp(inset, "right", "width", "value");
-        var top = raphaelDOM.utils.getProp(inset, "top", "height", "value");
-        var bottom = raphaelDOM.utils.getProp(inset, "bottom", "height", "value");
+        var left = Partition.utils.getProp(inset, "left", "width", "value");
+        var right = Partition.utils.getProp(inset, "right", "width", "value");
+        var top = Partition.utils.getProp(inset, "top", "height", "value");
+        var bottom = Partition.utils.getProp(inset, "bottom", "height", "value");
         return this._inset(left, top, right, bottom)
     }, outset: function (outset) {
         outset = _.isObject(outset) ? outset : {value: outset};
         outset.value |= 0;
-        var left = raphaelDOM.utils.getProp(outset, "left", "width", "value");
-        var right = raphaelDOM.utils.getProp(outset, "right", "width", "value");
-        var top = raphaelDOM.utils.getProp(outset, "top", "height", "value");
-        var bottom = raphaelDOM.utils.getProp(outset, "bottom", "height", "value");
+        var left = Partition.utils.getProp(outset, "left", "width", "value");
+        var right = Partition.utils.getProp(outset, "right", "width", "value");
+        var top = Partition.utils.getProp(outset, "top", "height", "value");
+        var bottom = Partition.utils.getProp(outset, "bottom", "height", "value");
         return this._outset(left, top, right, bottom)
     }, clone: function () {
-        return new raphaelDOM.Rect(this)
+        return new Partition.Rect(this)
     }, _inset: function (l, t, r, b) {
         var rect = this.clone();
-        l = raphaelDOM.utils.scale(l, this.width);
-        r = raphaelDOM.utils.scale(r, this.width);
-        t = raphaelDOM.utils.scale(t, this.height);
-        b = raphaelDOM.utils.scale(b, this.height);
+        l = Partition.utils.scale(l, this.width);
+        r = Partition.utils.scale(r, this.width);
+        t = Partition.utils.scale(t, this.height);
+        b = Partition.utils.scale(b, this.height);
         rect.left += l;
         rect.right -= r;
         rect.top += t;

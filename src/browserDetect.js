@@ -1,4 +1,4 @@
-raphaelDOM.browserDetect = function () {
+Partition.browserDetect = function () {
     !function (window, undefined) {
         "use strict";
         var EMPTY = "", UNKNOWN = "?", FUNC_TYPE = "function", UNDEF_TYPE = "undefined", OBJ_TYPE = "object", MAJOR = "major", MODEL = "model", NAME = "name", TYPE = "type", VENDOR = "vendor", VERSION = "version", ARCHITECTURE = "architecture", CONSOLE = "console", MOBILE = "mobile", TABLET = "tablet";

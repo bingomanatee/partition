@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Blend Tests</title>
+
+    <script language="javascript" src="/js/vendor/underscore-min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/jquery-1.7.2.min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/raphael-min.js">
+    </script>
+
+    <script language="javascript" src="/js/Partition.js">
+    </script>
+
+</head>
+<body>
+<h1>Partition use tests</h1>
+
+<h2>Blend</h2>
+
+<div id="draw-area2" style="width: 800px; height: 400px"></div>
+
+<script>
+    $(function () {
+
+        (function () {
+
+            var ele = $('#draw-area2')[0];
+            var paper = Raphael(ele);
+            var engine = Partition.engines.raphael({paper: paper});
+
+            function graph(data, r, g, b) {
+
+                var root = new Partition.Slice('graph', {}, $('#draw-area2'), engine)
+                        .setBottomPadding(30).setLeftPadding(30).setDrawType('none');
+
+                var bars = root.child().setDrawType('grid');
+                bars.columns = data.length;
+                bars.rows = 1;
+
+                var maxValue = _.max(_.pluck(data, 'value'));
+
+           bars.processCell = function (box, column, row) {
+                    var dataItem = data[column];
+                    box.name = dataItem.name;
+                    box.setDrawType('none').setHeight((dataItem.value * 100 / maxValue) + '%').setAnchor('BL');
+                    box.child('bar').setWidth(120).setHeight('100%').setDrawType('rect').setColor(r, g, b);
+                    box.child('label', {text: dataItem.name}).setDrawType('text').setColor(0,0,0).setAnchor('BL').setBottomMargin(-20);                         dataItem.name;
+                };
+
+                return root;
+            }
+
+            var data = [
+                {name: 'Jan 2013', value: 1000},
+                {name: 'Feb 2013', value: 500},
+                {name: 'Mar 2013', value: 2050},
+                {name: 'Apr 2013', value: 1500}
+
+            ]
+
+            var graph1 = graph(data, 0, 128, 128);
+
+            console.log('drawing first graph');
+            graph1.draw();
+            console.log('end drawing first graph');
+
+            data = data.slice(2).concat([
+                    {name: 'May 2013', value: 1000},
+                    {name: 'Jun 2013', value: 500},
+                    {name: 'Jul 2013', value: 800}]);
+
+            var graph2 = graph(data, 128, 0, 0);
+
+            if (true) {
+                setTimeout(function () {
+                    Partition.blend(graph1, graph2, 2000, '>', function () {
+                        console.log('blended');
+                    })
+                }, 3000);
+            }
+        })();
+
+    })
+
+
+</script>
+</body>
+</html>

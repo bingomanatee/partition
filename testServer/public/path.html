@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Path Tests</title>
+
+    <script language="javascript" src="/js/vendor/underscore-min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/jquery-1.7.2.min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/raphael-min.js">
+    </script>
+
+    <script language="javascript" src="/js/Partition.js">
+    </script>
+
+</head>
+<body>
+<h1>Partition use tests</h1>
+
+<h2>Path</h2>
+
+<div id="draw-area2" style="width: 800px; background-color: blue; height: 400px"></div>
+
+<script>
+    $(function () {
+
+        (function () {
+
+            function makeStarPoints(root, indent ,base ) {
+
+                base |= 100;
+                var half = base/2;
+                var base_sub = 100 - indent;
+
+                root.addPoint('M', {x: '0%', y: '0%'});
+                root.addPoint('L', {x:  half + '%', y: indent + '%'});
+                root.addPoint('L', {x: base  + '%', y: '0%'});
+                root.addPoint('L', {x: base_sub + '%', y: half + '%'});
+                root.addPoint('L', {x: base + '%', y: base + '%'});
+                root.addPoint('L', {x: half + '%', y: base_sub + '%'});
+                root.addPoint('L', {x: '0%', y: base + '%'});
+                root.addPoint('L', {x: indent + '%', y: half + '%'});
+                root.addPoint('L', {x: '0%', y: '0%'});
+            }
+
+            var ele = $('#draw-area2')[0];
+            var paper = Raphael(ele);
+            var root = new Partition.Slice('firstStar', {drawAttrs: {'stroke-width': 4}}, $('#draw-area2'), paper)
+                    .setDrawType('path').setColor(255, 255, 0).setStrokeColor(255, 0, 0);
+
+            makeStarPoints(root, 15);
+
+            var child = root.child('star 1', {drawAttrs: {'stroke-width': 2}})
+                   .setWidth('50%').setHeight('50%')
+                    .setDrawType('path').setColor(128, 255, 0).setStrokeColor(128, 0, 0);
+
+            makeStarPoints(child, 40);
+
+            child = root.child('star 2', {drawAttrs: {'stroke-width': 2}})
+                    .setDrawType('path').setWidth('50%').setHeight('50%')
+                    .setColor(128, 255, 125).setStrokeColor(128, 0, 125).setAnchor('BR');
+
+            makeStarPoints(child, 25);
+
+            root.draw();
+
+            var root2 =  new Partition.Slice('firstStar', {drawAttrs: {'stroke-width': 4}}, $('#draw-area2'), paper)
+                    .setDrawType('path').setColor(255, 255, 0).setStrokeColor(255, 0, 0);
+            makeStarPoints(root2, 45);
+
+            var child2 = root2.child('star 1', {drawAttrs: {'stroke-width': 2}})
+                    .setDrawType('path').setWidth('50%').setHeight('50%')
+                    .setColor(0, 128, 0).setStrokeColor(128, 0, 125).setAnchor('C');
+
+            makeStarPoints(child2, 35);
+
+            setTimeout(function(){
+                Partition.blend(root, root2, 2000, '<', _.identity);
+            }, 2000);
+        })();
+
+    })
+
+
+</script>
+</body>
+</html>

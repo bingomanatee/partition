@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Blend Tests</title>
+
+    <script language="javascript" src="/js/vendor/underscore-min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/jquery-1.7.2.min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/raphael-min.js">
+    </script>
+
+    <script language="javascript" src="/js/Partition.js">
+    </script>
+
+</head>
+<body>
+<h1>Partition use tests</h1>
+
+<h2>Blend</h2>
+
+<div id="bar-graph" style="width: 800px; height: 400px; background-color: rgb(225,225,220)"></div>
+
+<div id="bar-graph-blend" style="width: 800px; height: 400px; background-color: rgb(225,225,220)"></div>
+
+<script>
+    $(function () {
+
+        (function () {
+
+            var ele = $('#bar-graph')[0];
+
+            var paper = Raphael(ele);
+
+            var graph = Partition.graphs.bar('my bar graph', {}, $(ele), paper, [
+                {value: 1000, label: 'Jan 2013'},
+                {value: 500, label: 'Feb 2013'}
+            ]);
+
+            graph.draw();
+
+            var ele2 = $('#bar-graph-blend')[0];
+
+            var paper2 = Raphael(ele2);
+
+        })();
+
+    })
+
+
+</script>
+</body>
+</html>

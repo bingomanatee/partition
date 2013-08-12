@@ -1,10 +1,10 @@
-raphaelDOM.Slice = function () {
+Partition.Slice = function () {
     var _rgb = _.template("rgb(<%= red %>,<%= green %>,<%= blue %>)");
     var _hsl = _.template("hsl(<%= hue %>, <%= sat %>%,<%= light %>%)");
     var _DEBUG_UNDRAW = true;
 
     function _addSVGclass(node, klass) {
-        var det = raphaelDOM.browserDetect();
+        var det = Partition.browserDetect();
         if (!(det.browser == "Explorer" && det.browser.version <= 8)) {
             return node.node.setAttribute("class", klass)
         }
@@ -12,7 +12,7 @@ raphaelDOM.Slice = function () {
 
     var box_id = 0;
 
-    function Slice(name, params, parent, paper) {
+    function Slice(name, params, parent, draw_engine) {
         this.anchor = "TL";
         this.margin = 0;
         this.padding = 0;
@@ -31,23 +31,23 @@ raphaelDOM.Slice = function () {
         this.name = name;
         this._children = [];
         this.parent = parent;
-        this.paper = paper || (parent ? parent.paper : null);
-        this.marginDim = new raphaelDOM.Dimension(this.margin);
-        this.paddingDim = new raphaelDOM.Dimension(this.padding)
+        this.draw_engine = draw_engine ? draw_engine: parent ? parent.draw_engine : null;
+        this.marginDim = new Partition.Dimension(this.margin);
+        this.paddingDim = new Partition.Dimension(this.padding)
     }
 
-    Slice.prototype = {TYPE: "raphaelDOM.BOX", is_root: function () {
-        return this.parent instanceof jQuery || !(this.parent.TYPE == "raphaelDOM.BOX")
+    Slice.prototype = {TYPE: "Partition.BOX", is_root: function () {
+        return this.parent instanceof jQuery || !(this.parent.TYPE == "Partition.BOX")
     }, parentRect: function () {
         if (this.is_root()) {
-            return new raphaelDOM.Rect(0, 0, this.parent.width(), this.parent.height())
+            return new Partition.Rect(0, 0, this.parent.width(), this.parent.height())
         } else {
             return this.parent.rect(true)
         }
-    }, setPaper: function (paper) {
-        this.paper = paper;
+    }, setDrawEngine: function (draw_engine) {
+        this.draw_engine = draw_engine;
         _.each(this._children, function (c) {
-            c.setPaper(paper)
+            c.setDrawEngine(draw_engine)
         })
     }, getPoints: function () {
         var rect = this.rect();
@@ -56,7 +56,7 @@ raphaelDOM.Slice = function () {
             return out
         }, "", this)
     }, addPoint: function (type, params) {
-        this.points.push(raphaelDOM.utils.point(type, params, this))
+        this.points.push(Partition.utils.point(type, params, this))
     }, getPath: function () {
         var out = "";
         if (this.parent && this.parent.getPath) {
@@ -74,8 +74,8 @@ raphaelDOM.Slice = function () {
     }, rect: function (inner) {
         var parentRect = this.parentRect();
         var marginRect = parentRect.inset(this.marginDim);
-        var width = raphaelDOM.utils.scale(this.width, parentRect.width);
-        var height = raphaelDOM.utils.scale(this.height, parentRect.height);
+        var width = Partition.utils.scale(this.width, parentRect.width);
+        var height = Partition.utils.scale(this.height, parentRect.height);
         var left, top;
         var diffWidth = marginRect.width - width;
         var diffHeight = marginRect.height - height;
@@ -119,7 +119,7 @@ raphaelDOM.Slice = function () {
             default:
                 throw new Error("bad anchor" + this.anchor)
         }
-        var rect = new raphaelDOM.Rect(left, top, width, height);
+        var rect = new Partition.Rect(left, top, width, height);
         return inner ? rect.inset(this.paddingDim) : rect
     }, child: function (name, attrs) {
         var child = new Slice(name || this.name + " child " + this._children.length, attrs || {}, this);
@@ -139,7 +139,7 @@ raphaelDOM.Slice = function () {
     }, getTitle: function () {
         return this.hasOwnProperty("title") ? this.title : ""
     }, setPadding: function (p) {
-        this.paddingDim = new raphaelDOM.Dimension(p);
+        this.paddingDim = new Partition.Dimension(p);
         return this
     }, setTopPadding: function (m) {
         this.paddingDim.top = m;
@@ -160,7 +160,7 @@ raphaelDOM.Slice = function () {
         }
         return _.extend({"stroke-width": 0, fill: "black"}, this.drawAttrs || {})
     }, setMargin: function (p) {
-        this.marginDim = new raphaelDOM.Dimension(p);
+        this.marginDim = new Partition.Dimension(p);
         return this
     }, setTopMargin: function (m) {
         this.marginDim.top = m;
@@ -207,38 +207,35 @@ raphaelDOM.Slice = function () {
         this.strokeColor.blue = b;
         return this
     }, setDrawType: function (type) {
-        if (!raphaelDOM.draw.hasOwnProperty(type)) {
+        if (!(Partition.draw[type] ||  this.draw_engine[type])) {
+            console.log('type:', type, 'draw: ', Partition.draw, 'engine:', this.draw_engine);
             throw new Error("bad draw type " + type)
         }
         this.drawType = type;
         return this
     }, undraw: function () {
-        if (_DEBUG_UNDRAW) {
-            console.log("undrawing ", this.name, "element", this.element)
-        }
-        if (this.element) {
-            this.element.attr("opacity", 0);
-            this.element.hide();
-            this.element.remove();
-            delete this.element
-        } else {
-            if (_DEBUG_UNDRAW)console.log(" ... no element to undraw")
-        }
+        this.draw_engine.undraw(this);
         this._drawn = false;
         _.each(this._children, function (child) {
             child.undraw()
         })
-    }, draw: function (paper) {
+    }, draw: function (draw_engine) {
         console.log("drawing ", this.getPathID());
-        if (paper) {
-            this.paper = paper
+        if (draw_engine) {
+            this.draw_engine = draw_engine
+        }
+
+        if (!this.draw_engine){
+            throw new Error('slice has no draw engine: ' + this.getPath());
         }
         this._computeFill();
         if (this.drawAttrs["stroke-width"]) {
             this._computeStroke()
         }
-        if (raphaelDOM.draw[this.drawType]) {
-            raphaelDOM.draw[this.drawType](this)
+        if (Partition.draw[this.drawType]) {
+            Partition.draw[this.drawType](this)
+        } else if (this.draw_engine[this.drawType]){
+            this.draw_engine[this.drawType](this);
         } else {
             throw new Error("cannot find drawType " + this.drawType)
         }
@@ -247,7 +244,7 @@ raphaelDOM.Slice = function () {
         }
         this._drawn = true;
         _.each(this._children, function (child) {
-            child.draw(this.paper)
+            child.draw(this.draw_engine)
         }, this)
     }};
     return Slice
