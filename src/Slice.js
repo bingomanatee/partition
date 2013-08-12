@@ -1,15 +1,6 @@
 Partition.Slice = function () {
     var _rgb = _.template("rgb(<%= red %>,<%= green %>,<%= blue %>)");
     var _hsl = _.template("hsl(<%= hue %>, <%= sat %>%,<%= light %>%)");
-    var _DEBUG_UNDRAW = true;
-
-    function _addSVGclass(node, klass) {
-        var det = Partition.browserDetect();
-        if (!(det.browser == "Explorer" && det.browser.version <= 8)) {
-            return node.node.setAttribute("class", klass)
-        }
-    }
-
     var box_id = 0;
 
     function Slice(name, params, parent, draw_engine) {
@@ -40,7 +31,7 @@ Partition.Slice = function () {
         return this.parent instanceof jQuery || !(this.parent.TYPE == "Partition.BOX")
     }, parentRect: function () {
         if (this.is_root()) {
-            return new Partition.Rect(0, 0, this.parent.width(), this.parent.height())
+            return new Partition.Rect(0, 0, $(this.parent).width(), $(this.parent).height())
         } else {
             return this.parent.rect(true)
         }
@@ -220,6 +211,10 @@ Partition.Slice = function () {
             child.undraw()
         })
     }, draw: function (draw_engine) {
+        if (this._drawn){
+            throw new Error('attempting to draw the same shape twice: ' + this.getPath());
+        }
+
         console.log("drawing ", this.getPathID());
         if (draw_engine) {
             this.draw_engine = draw_engine
@@ -238,9 +233,6 @@ Partition.Slice = function () {
             this.draw_engine[this.drawType](this);
         } else {
             throw new Error("cannot find drawType " + this.drawType)
-        }
-        if (this.element && !this.noCrisp) {
-            _addSVGclass(this.element, "crispEdges")
         }
         this._drawn = true;
         _.each(this._children, function (child) {

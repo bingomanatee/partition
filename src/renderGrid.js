@@ -50,8 +50,7 @@ Partition.draw.grid = (function (paper) {
 
 				if (box.processCell) {
 					box.processCell(cell, column, row);
-				}
-				cell.draw(paper);
+                }
 
 				if (_DEBUG || box.debug) {
 					/*console.log('cell specs: ', {

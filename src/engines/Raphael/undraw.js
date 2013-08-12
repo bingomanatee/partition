@@ -1,6 +1,6 @@
 (function(){
 
-    var _DEBUG_UNDRAW = false;
+    var _DEBUG_UNDRAW = true;
 
     Partition.engines.raphael_mixin.undraw = function(box){
         if (_DEBUG_UNDRAW) {
@@ -10,7 +10,7 @@
             box.element.attr("opacity", 0);
             box.element.hide();
             box.element.remove();
-            delete box.element
+             box.element
         } else {
             if (_DEBUG_UNDRAW)console.log(" ... no element to undraw")
         }

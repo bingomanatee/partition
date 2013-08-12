@@ -21,7 +21,7 @@ Partition.blend = (function () {
 			rect: box.rect()
 		};
 		out[name] = data;
-		data.attr = box.element ? box.element.attr() : {};
+		data.attr = box.element ? _.clone(box.element.attr()) : {};
 		if (data.attr.path){
 		//	delete data.attr.path;
 		}
@@ -51,24 +51,18 @@ Partition.blend = (function () {
 
 	return function (box1, box2, ms, easing, callback) {
 		if (_DEBUG) console.log('blending ', box1.name, ' with ', box2.name, ' over ', ms, ' easing ', easing);
-	//	var tempPaper = Raphael(box1.parent);
 
 		if (_DEBUG) console.log('blending ', box1.name, 'to', box2.name);
 
 		var box1elements = _getElements(box1);
 
-	//	box2.setDrawEngine(tempPaper);
 		box2.draw();
 
 		var box2elements = _getElements(box2);
-		box2.undraw();
-	//	tempPaper.clear();
-		//box2.setDrawEngine(box1.draw_engine);
+        box2.undraw();
 
 		var commonKeys = _.intersection(_.keys(box1elements), _.keys(box2elements));
 		var oldKeys = _.difference(_.keys(box1elements), _.keys(box2elements));
-
-		//console.log('blending ', box1elements, 'and', box2elements, ' keys: ', commonKeys);
 
 		var doneOnce = false;
 		function onDone() {
@@ -114,6 +108,9 @@ Partition.blend = (function () {
 				data.box.element.animate({ opacity: 0 }, ms, easing, onDone);
 			});
 		}
+
+        commonKeys = null;
+        oldKeys = null;
 
 		box2.undraw();
 	};

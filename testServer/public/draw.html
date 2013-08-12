@@ -2,9 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8">
+
     <title>Draw Tests</title>
 
     <script language="javascript" src="/js/vendor/underscore-min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/backbone-min.js">
     </script>
 
     <script language="javascript" src="/js/vendor/jquery-1.7.2.min.js">
@@ -49,9 +53,7 @@ $(function () {
 
     (function () {
 
-        var paper = Raphael($('#draw-area')[0]);
-
-        var engine = Partition.engines.raphael({paper: paper});
+        var engine = Partition.engines.raphael($('#draw-area')[0]);
 
         var box = new Partition.Slice('paper 1', {width: 300, height: 300, drawType: 'none',
                     drawAttrs:                           {fill: 'red'}},
@@ -74,8 +76,7 @@ $(function () {
 
     (function () {
 
-        var paper = Raphael($('#draw-area2')[0]);
-        var engine = Partition.engines.raphael({paper: paper});
+        var engine = Partition.engines.raphael($('#draw-area2')[0]);
 
         var box = new Partition.Slice('target 2', {width: 300, height: 300, drawType: 'none',
                     drawAttrs:                           {fill: 'red'}},
@@ -103,8 +104,7 @@ $(function () {
 
     (function () {
 
-        var paper = Raphael($('#draw-area4')[0]);
-        var engine = Partition.engines.raphael({paper: paper});
+        var engine = Partition.engines.raphael($('#draw-area4')[0]);
 
         var box = new Partition.Slice('grid box', {width: 800, height: 300},
                 $('#draw-area2'), engine).setDrawType('grid');
@@ -191,9 +191,7 @@ $(function () {
     })();
 
     (function () {
-
-        var paper = Raphael($('#draw-area3')[0]);
-        var engine = Partition.engines.raphael({paper: paper});
+        var engine = Partition.engines.raphael($('#draw-area3')[0]);
 
         var box = new Partition.Slice('grid box', {width: 300, height: 300, drawAttrs: {fill: 'red'}},
                 $('#draw-area2'), engine).setDrawType('grid');
@@ -215,8 +213,7 @@ $(function () {
 
     (function () {
 
-        var paper = Raphael($('#draw-anchor-demo')[0]);
-        var engine = Partition.engines.raphael({paper: paper});
+        var engine = Partition.engines.raphael($('#draw-anchor-demo')[0]);
 
         var box = new Partition.Slice('grid box', {width: 300, height: 300, drawAttrs: {fill: 'red'}},
                 $('#draw-area2'), engine).setDrawType('grid');

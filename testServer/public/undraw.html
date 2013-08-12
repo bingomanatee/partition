@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <title>Draw Tests</title>
+
+    <script language="javascript" src="/js/vendor/underscore-min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/backbone-min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/jquery-1.7.2.min.js">
+    </script>
+
+    <script language="javascript" src="/js/vendor/raphael-min.js">
+    </script>
+
+    <script language="javascript" src="/js/Partition.js">
+    </script>
+
+</head>
+<body>
+<h1>Partition use tests</h1>
+
+<h2>Undraw</h2>
+
+<div id="draw-area" style="width: 1000px; height: 500px"></div>
+<script>
+$(function () {
+
+    (function () {
+
+        var engine = Partition.engines.raphael('#draw-area', 500, 500);
+
+        var box = new Partition.Slice('box to undraw', {width: 300, height: 300}, engine.element, engine).setDrawType('rect').setColor(255, 0, 0);
+
+        box.child().setWidth('50%').setHeight('50%').setDrawType('rect').setColor(255,0,255);
+
+        box.draw();
+
+        setTimeout(function(){
+            box.undraw()
+        }, 5000);
+
+    })();
+
+})
+</script>
+</body>
+</html>

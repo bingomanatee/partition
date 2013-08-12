@@ -180,7 +180,7 @@ Partition.blend = (function () {
 			rect: box.rect()
 		};
 		out[name] = data;
-		data.attr = box.element ? box.element.attr() : {};
+		data.attr = box.element ? _.clone(box.element.attr()) : {};
 		if (data.attr.path){
 		//	delete data.attr.path;
 		}
@@ -210,6 +210,7 @@ Partition.blend = (function () {
 
 	return function (box1, box2, ms, easing, callback) {
 		if (_DEBUG) console.log('blending ', box1.name, ' with ', box2.name, ' over ', ms, ' easing ', easing);
+
 	//	var tempPaper = Raphael(box1.parent);
 
 		if (_DEBUG) console.log('blending ', box1.name, 'to', box2.name);
@@ -220,7 +221,8 @@ Partition.blend = (function () {
 		box2.draw();
 
 		var box2elements = _getElements(box2);
-		box2.undraw();
+        box2.undraw();
+
 	//	tempPaper.clear();
 		//box2.setDrawEngine(box1.draw_engine);
 
@@ -273,6 +275,9 @@ Partition.blend = (function () {
 				data.box.element.animate({ opacity: 0 }, ms, easing, onDone);
 			});
 		}
+
+        commonKeys = null;
+        oldKeys = null;
 
 		box2.undraw();
 	};
@@ -810,15 +815,6 @@ Partition.blend = (function () {
 }();;Partition.Slice = function () {
     var _rgb = _.template("rgb(<%= red %>,<%= green %>,<%= blue %>)");
     var _hsl = _.template("hsl(<%= hue %>, <%= sat %>%,<%= light %>%)");
-    var _DEBUG_UNDRAW = true;
-
-    function _addSVGclass(node, klass) {
-        var det = Partition.browserDetect();
-        if (!(det.browser == "Explorer" && det.browser.version <= 8)) {
-            return node.node.setAttribute("class", klass)
-        }
-    }
-
     var box_id = 0;
 
     function Slice(name, params, parent, draw_engine) {
@@ -849,7 +845,7 @@ Partition.blend = (function () {
         return this.parent instanceof jQuery || !(this.parent.TYPE == "Partition.BOX")
     }, parentRect: function () {
         if (this.is_root()) {
-            return new Partition.Rect(0, 0, this.parent.width(), this.parent.height())
+            return new Partition.Rect(0, 0, $(this.parent).width(), $(this.parent).height())
         } else {
             return this.parent.rect(true)
         }
@@ -1029,6 +1025,10 @@ Partition.blend = (function () {
             child.undraw()
         })
     }, draw: function (draw_engine) {
+        if (this._drawn){
+            throw new Error('attempting to draw the same shape twice: ' + this.getPath());
+        }
+
         console.log("drawing ", this.getPathID());
         if (draw_engine) {
             this.draw_engine = draw_engine
@@ -1047,9 +1047,6 @@ Partition.blend = (function () {
             this.draw_engine[this.drawType](this);
         } else {
             throw new Error("cannot find drawType " + this.drawType)
-        }
-        if (this.element && !this.noCrisp) {
-            _addSVGclass(this.element, "crispEdges")
         }
         this._drawn = true;
         _.each(this._children, function (child) {
@@ -1221,8 +1218,7 @@ Partition.utils.point = (function () {
 
 				if (box.processCell) {
 					box.processCell(cell, column, row);
-				}
-				cell.draw(paper);
+                }
 
 				if (_DEBUG || box.debug) {
 					/*console.log('cell specs: ', {
@@ -1306,35 +1302,52 @@ Partition.graphs.bar = (function () {
         return box;
     }
 
-})();;(function(){
+})();;(function () {
 
-    function Engine(params){
-        _.extend(this, params);
+    function Engine(element) {
+        this.setElement(element);
+        if (this.events){
+            _.extend(this, Backbone.Events);
+            _.each(this.events, function(handler, name){
+                this.on(name, handler, this);
+            }, this);
+        }
+    }
+
+    function _makeSVGcrisp(node) {
+        var det = Partition.browserDetect();
+        if (!(det.browser == "Explorer" && det.browser.version <= 8)) {
+             node.node.setAttribute("style", 'shape-rendering: crispEdges')
+        }
     }
 
     Engine.prototype = {
 
-        clear: function(){
+        setElement: function(element){
+            throw new Error('must implement set_element');
+        },
+
+        clear: function () {
             throw new Error('must implement clear');
         },
 
-        undraw: function(box){
-          throw new Error('must implement undraw');
+        undraw: function (box) {
+            throw new Error('must implement undraw');
         },
 
-        polygon: function(box){
+        polygon: function (box) {
             throw new Error('must implement polygon');
         },
 
-        rect: function(box){
+        rect: function (box) {
             throw new Error('must implement rect');
         },
 
-        wedge: function(box){
+        wedge: function (box) {
             throw new Error('must implement wedge');
         },
 
-        circle: function(box){
+        circle: function (box) {
             throw new Error('must implement wedge');
         }
 
@@ -1342,20 +1355,24 @@ Partition.graphs.bar = (function () {
 
     Partition.engines = {
 
-        raphael: function(params){
-            if (!Partition.engines._Raphael){
+        raphael: function (params) {
+            if (!Partition.engines._Raphael) {
                 Partition.engines._Raphael = Partition.engines.make_engine(Partition.engines.raphael_mixin);
             }
             return new Partition.engines._Raphael(params);
         },
 
-        make_engine: function(mixin){
+        canvas: function (params) {
+            if (!Partition.engines._Canvas) {
+                Partition.engines._Canvas = Partition.engines.make_engine(Partition.engines.canvas_mixin);
+            }
+            return new Partition.engines._Canvas(params);
+        },
 
-            var new_engine = function(params){
-                _.extend(this, params);
-                var args = _.toArray(arguments);
+        make_engine: function (mixin) {
 
-                if (this.init) this.init.apply(this, args.slice(1));
+            var new_engine = function (element) {
+                this.setElement(element);
             };
 
             _.extend(new_engine.prototype, Engine.prototype);
@@ -1364,9 +1381,16 @@ Partition.graphs.bar = (function () {
             return new_engine;
         },
 
-        raphael_mixin: {},
+        raphael_mixin: {
+            events: {
+                draw: function(slice){
+                    _makeSVGcrisp(slice.element);
+                }
+            }
 
-        canvas: {}
+        },
+
+        canvas_mixin: {}
 
     };
 })();;Partition.engines.raphael_mixin.circle = (function () {
@@ -1401,11 +1425,11 @@ Partition.graphs.bar = (function () {
 	};
 })();;Partition.engines.raphael_mixin.rect =  function(box){
 	var _DEBUG = false;
-
 	var rect = box.rect();
 	box.element = this.paper.rect(rect.left, rect.top, rect.width, rect.height);
 	if (_DEBUG) console.log('box: ', box.name, ':',  box, 'rect: ', rect);
 	box.element.attr(_.extend({'stroke-width': 0, fill: 'black', title: box.name}, box.drawAttrs || {}));
+
 };;Partition.engines.raphael_mixin.text = function (box) {
 	var _DEBUG = false;
 
@@ -1499,7 +1523,7 @@ Partition.graphs.bar = (function () {
 
 })();;(function(){
 
-    var _DEBUG_UNDRAW = false;
+    var _DEBUG_UNDRAW = true;
 
     Partition.engines.raphael_mixin.undraw = function(box){
         if (_DEBUG_UNDRAW) {
@@ -1509,9 +1533,36 @@ Partition.graphs.bar = (function () {
             box.element.attr("opacity", 0);
             box.element.hide();
             box.element.remove();
-            delete box.element
+             box.element
         } else {
             if (_DEBUG_UNDRAW)console.log(" ... no element to undraw")
+        }
+    }
+    
+    
+})();(function(){
+
+    var _DEBUG_UNDRAW = false;
+
+    Partition.engines.raphael_mixin.setElement = function(element, width, height){
+        if (_.isString(element)){
+            element = $('body').find(element)[0];
+        }
+        if (!element instanceof HTMLElement){
+            throw new Error('engine must be passed domElement or css to dom element')
+        }
+
+        if (arguments.length < 2){
+            width = $(element).width();
+            height = $(element).height();
+        }
+
+        this.element = element;
+
+        try {
+            this.paper = new Raphael(element, width, height);
+        } catch(err){
+            console.log('cannot make raphael paper from element');
         }
     }
     

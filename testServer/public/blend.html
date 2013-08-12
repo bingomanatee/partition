@@ -7,6 +7,9 @@
     <script language="javascript" src="/js/vendor/underscore-min.js">
     </script>
 
+    <script language="javascript" src="/js/vendor/backbone-min.js">
+    </script>
+
     <script language="javascript" src="/js/vendor/jquery-1.7.2.min.js">
     </script>
 
@@ -30,8 +33,7 @@
         (function () {
 
             var ele = $('#draw-area2')[0];
-            var paper = Raphael(ele);
-            var engine = Partition.engines.raphael({paper: paper});
+            var engine = Partition.engines.raphael(ele);
 
             function graph(data, r, g, b) {
 
