@@ -2,9 +2,9 @@
 
     function Engine(element) {
         this.setElement(element);
-        if (this.events){
-            _.extend(this, Backbone.Events);
-            _.each(this.events, function(handler, name){
+        _.extend(this, Backbone.Events);
+        if (this.events) {
+            _.each(this.events, function (handler, name) {
                 this.on(name, handler, this);
             }, this);
         }
@@ -13,13 +13,13 @@
     function _makeSVGcrisp(node) {
         var det = Partition.browserDetect();
         if (!(det.browser == "Explorer" && det.browser.version <= 8)) {
-             node.node.setAttribute("style", 'shape-rendering: crispEdges')
+            node.node.setAttribute("style", 'shape-rendering: crispEdges')
         }
     }
 
     Engine.prototype = {
 
-        setElement: function(element){
+        setElement: function (element) {
             throw new Error('must implement set_element');
         },
 
@@ -68,7 +68,7 @@
         make_engine: function (mixin) {
 
             var new_engine = function (element) {
-                this.setElement(element);
+                Engine.call(this, element);
             };
 
             _.extend(new_engine.prototype, Engine.prototype);
@@ -79,14 +79,23 @@
 
         raphael_mixin: {
             events: {
-                draw: function(slice){
-                    _makeSVGcrisp(slice.element);
+                afterDraw: function (slice) {
+                    if (slice.element) _makeSVGcrisp(slice.element);
                 }
             }
 
         },
 
-        canvas_mixin: {}
+        canvas_mixin: {
+            events: {
+                'afterDraw': function (slice) {
+                    console.log('canvas afterDraw');
+                    slice.draw_engine.stage.update();
+                }
+            }
+
+
+        }
 
     };
 })();

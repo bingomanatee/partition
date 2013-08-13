@@ -25,10 +25,10 @@ describe('basic Partition', function () {
 
 		describe('child measurements', function () {
 
-			var box;
+			var slice;
 
 			before(function () {
-				box = new Partition.Slice('foo', {
+				slice = new Partition.Slice('foo', {
 
 
 				}, {
@@ -39,7 +39,7 @@ describe('basic Partition', function () {
 			})
 
 			it('should be able to establish basic left/right/width/height values from an "element"', function () {
-				var rect = box.rect();
+				var rect = slice.rect();
 
 				rect.left.should.eql(0, 'rect left is zero');
 				rect.top.should.eql(0, 'rect top is zero');
@@ -51,7 +51,7 @@ describe('basic Partition', function () {
 
 			it('should be able to generate a child half as wide', function () {
 
-				var child = box.child('bar').setWidth('50%');
+				var child = slice.child('bar').setWidth('50%');
 				var rect = child.rect();
 
 				rect.left.should.eql(0, 'child also has left 0');
@@ -64,7 +64,7 @@ describe('basic Partition', function () {
 
 			it('should be able to generate a child half as tall', function () {
 
-				var child = box.child('bar').setHeight('50%');
+				var child = slice.child('bar').setHeight('50%');
 				var rect = child.rect();
 
 				rect.left.should.eql(0, 'child also has left 0');
@@ -77,8 +77,8 @@ describe('basic Partition', function () {
 
 			it('should be able to generate a child half as wide with BR anchor', function () {
 
-				var child = box.child('bar').setWidth('50%').setAnchor('BR');
-				var parent_rect = box.rect();
+				var child = slice.child('bar').setWidth('50%').setAnchor('BR');
+				var parent_rect = slice.rect();
 				var rect = child.rect();
 
 				rect.left.should.eql(200, 'child has left 200');
@@ -91,7 +91,7 @@ describe('basic Partition', function () {
 
 			it('should be able to generate a child half as tall with BR anchor', function () {
 
-				var child = box.child('bar').setHeight('50%').setAnchor('BR');
+				var child = slice.child('bar').setHeight('50%').setAnchor('BR');
 				var rect = child.rect();
 
 				rect.left.should.eql(0, 'child also has left 0');
@@ -107,10 +107,10 @@ describe('basic Partition', function () {
 
 			describe('equal padding', function () {
 
-				var box;
+				var slice;
 
 				before(function () {
-					box = new Partition.Slice('parent with 20 pixel padding', {
+					slice = new Partition.Slice('parent with 20 pixel padding', {
 						padding: 20
 					}, {
 
@@ -121,8 +121,8 @@ describe('basic Partition', function () {
 
 				it('should be able to establish basic left/right/width/height values from an "element"', function () {
 
-					/* ********** test the root box *********** */
-					var rect = box.rect();
+					/* ********** test the root slice *********** */
+					var rect = slice.rect();
 
 					rect.left.should.eql(0, 'rect left is 0');
 					rect.top.should.eql(0, 'rect top is 0');
@@ -134,12 +134,12 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child - less padding', function () {
 
-					/* ********** test a half as wide box *********** */
+					/* ********** test a half as wide slice *********** */
 
-					var child = box.child('child with no padding or margin');
+					var child = slice.child('child with no padding or margin');
 					var rect = child.rect();
 
-					console.log('parent: ', box, ' rect ', box.rect());
+					console.log('parent: ', slice, ' rect ', slice.rect());
 					console.log('child: ', child, ' rect ', child.rect());
 
 					rect.left.should.eql(20, 'child has left 20');
@@ -152,7 +152,7 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child half as wide - less padding', function () {
 
-					var child = box.child('bar').setWidth('50%');
+					var child = slice.child('bar').setWidth('50%');
 					var rect = child.rect();
 
 					rect.left.should.eql(20, 'child has left 20');
@@ -165,7 +165,7 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child half as tall', function () {
 
-					var child = box.child('bar').setHeight('50%');
+					var child = slice.child('bar').setHeight('50%');
 					var rect = child.rect();
 
 					rect.left.should.eql(20, 'child also has left 0');
@@ -178,7 +178,7 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child half as wide with BR anchor', function () {
 
-					var child = box.child('bar').setWidth('50%').setAnchor('BR');
+					var child = slice.child('bar').setWidth('50%').setAnchor('BR');
 					var rect = child.rect();
 
 					rect.left.should.eql(200, 'child has left 200');
@@ -191,7 +191,7 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child half as tall with BR anchor', function () {
 
-					var child = box.child('bar').setHeight('50%').setAnchor('BR');
+					var child = slice.child('bar').setHeight('50%').setAnchor('BR');
 					var rect = child.rect();
 
 					rect.left.should.eql(20, 'child also has left 20');
@@ -205,10 +205,10 @@ describe('basic Partition', function () {
 
 			describe('equal padding, percent', function () {
 
-				var box;
+				var slice;
 
 				before(function () {
-					box = new Partition.Slice('parent with 10% padding', {
+					slice = new Partition.Slice('parent with 10% padding', {
 						padding: '10%'
 					}, {
 						width:  function () { return 400; },
@@ -218,8 +218,8 @@ describe('basic Partition', function () {
 
 				it('should be able to establish basic left/right/width/height values from an "element"', function () {
 
-					/* ********** test the root box *********** */
-					var rect = box.rect();
+					/* ********** test the root slice *********** */
+					var rect = slice.rect();
 
 					rect.left.should.eql(0, 'rect left is 0');
 					rect.top.should.eql(0, 'rect top is 0');
@@ -231,9 +231,9 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child - less % padding', function () {
 
-					/* ********** test a half as wide box *********** */
+					/* ********** test a half as wide slice *********** */
 
-					var child = box.child('child with no padding');
+					var child = slice.child('child with no padding');
 					var parent_rect = child.parent.rect();
 					var rect = child.rect();
 
@@ -247,7 +247,7 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child half as wide - less padding', function () {
 
-					var child = box.child('bar').setWidth('50%');
+					var child = slice.child('bar').setWidth('50%');
 					var rect = child.rect();
 
 					rect.left.should.eql(40, 'child has left 40');
@@ -260,7 +260,7 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child half as tall - less percent padding', function () {
 
-					var child = box.child('bar').setHeight('50%');
+					var child = slice.child('bar').setHeight('50%');
 					var rect = child.rect();
 
 					rect.left.should.eql(40, 'child also has left 40');
@@ -273,7 +273,7 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child half as wide with BR anchor', function () {
 
-					var child = box.child('bar').setWidth('50%').setAnchor('BR');
+					var child = slice.child('bar').setWidth('50%').setAnchor('BR');
 					var rect = child.rect();
 
 					rect.left.should.eql(200, 'child has left 200');
@@ -286,7 +286,7 @@ describe('basic Partition', function () {
 
 				it('should be able to generate a child half as tall with BR anchor', function () {
 
-					var child = box.child('bar').setHeight('50%').setAnchor('BR');
+					var child = slice.child('bar').setHeight('50%').setAnchor('BR');
 					var rect = child.rect();
 
 					rect.left.should.eql(40, 'child also has left 40');
@@ -304,13 +304,13 @@ describe('basic Partition', function () {
 
 			it('should be able to make a grid with boxes', function () {
 
-				var box = new Partition.Slice('target 1', {drawAttrs: {fill: 'red'}},
+				var slice = new Partition.Slice('target 1', {drawAttrs: {fill: 'red'}},
 					{
 						width: function () { return 800 }, height: function () { return 400 }
 					});
 
 				_.each(_.range(0, 100, 25), function (y) {
-					var row = box.child('row' + y).setHeight('25%').setTopMargin(y + '%');
+					var row = slice.child('row' + y).setHeight('25%').setTopMargin(y + '%');
 					row.drawMode = 'none';
 					var row_rect = row.rect();
 					var inset_rect = row.rect(true);

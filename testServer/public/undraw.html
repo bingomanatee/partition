@@ -34,14 +34,14 @@ $(function () {
 
         var engine = Partition.engines.raphael('#draw-area', 500, 500);
 
-        var box = new Partition.Slice('box to undraw', {width: 300, height: 300}, engine.element, engine).setDrawType('rect').setColor(255, 0, 0);
+        var slice = new Partition.Slice('slice to undraw', {width: 300, height: 300}, engine.element, engine).setDrawType('rect').setColor(255, 0, 0);
 
-        box.child().setWidth('50%').setHeight('50%').setDrawType('rect').setColor(255,0,255);
+        slice.child().setWidth('50%').setHeight('50%').setDrawType('rect').setColor(255,0,255);
 
-        box.draw();
+        slice.draw();
 
         setTimeout(function(){
-            box.undraw()
+            slice.undraw()
         }, 5000);
 
     })();

@@ -33,7 +33,17 @@ module.exports = function (grunt) {
                     'src/engines/Raphael/renderWedge.js',
                     'src/engines/Raphael/undraw.js',
                     'src/engines/Raphael/setElement.js',
-                    'src/engines/Raphael/clear.js'
+                    'src/engines/Raphael/clear.js',
+
+                    'src/engines/index.js',
+                    'src/engines/Canvas/renderCircle.js',
+                    'src/engines/Canvas/renderPath.js',
+                    'src/engines/Canvas/renderRect.js',
+                    'src/engines/Canvas/renderText.js',
+                    'src/engines/Canvas/renderWedge.js',
+                    'src/engines/Canvas/undraw.js',
+                    'src/engines/Canvas/setElement.js',
+                    'src/engines/Canvas/clear.js'
                 ],
                 dest: 'build/Partition.js'
             }

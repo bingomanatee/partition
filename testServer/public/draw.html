@@ -55,12 +55,12 @@ $(function () {
 
         var engine = Partition.engines.raphael($('#draw-area')[0]);
 
-        var box = new Partition.Slice('paper 1', {width: 300, height: 300, drawType: 'none',
+        var slice = new Partition.Slice('paper 1', {width: 300, height: 300, drawType: 'none',
                     drawAttrs:                           {fill: 'red'}},
                 $('#draw-area'), engine);
 
         _.each(_.range(0, 100, 20), function (y) {
-            var row = box.child('row' + y).setHeight('20%').setTopMargin(y + '%');
+            var row = slice.child('row' + y).setHeight('20%').setTopMargin(y + '%');
             row.drawMode = 'none';
 
             _.each(_.range(0, 100, 20), function (x) {
@@ -70,7 +70,7 @@ $(function () {
             });
         });
 
-        box.draw();
+        slice.draw();
 
     })();
 
@@ -78,12 +78,12 @@ $(function () {
 
         var engine = Partition.engines.raphael($('#draw-area2')[0]);
 
-        var box = new Partition.Slice('target 2', {width: 300, height: 300, drawType: 'none',
+        var slice = new Partition.Slice('target 2', {width: 300, height: 300, drawType: 'none',
                     drawAttrs:                           {fill: 'red'}},
                 $('#draw-area2'), engine);
 
         _.each(_.range(0, 100, 20), function (y) {
-            var row = box.child('row' + y).setHeight('20%').setTopMargin(y + '%');
+            var row = slice.child('row' + y).setHeight('20%').setTopMargin(y + '%');
             row.drawType = 'none';
 
             _.each(_.range(0, 100, 20), function (x) {
@@ -99,20 +99,20 @@ $(function () {
             });
         });
 
-        box.draw();
+        slice.draw();
     })();
 
     (function () {
 
         var engine = Partition.engines.raphael($('#draw-area4')[0]);
 
-        var box = new Partition.Slice('grid box', {width: 800, height: 300},
+        var slice = new Partition.Slice('grid slice', {width: 800, height: 300},
                 $('#draw-area2'), engine).setDrawType('grid');
 
-        box.columns = 4;
-        box.rows = 4;
-        box.columnMargin = 5;
-        box.rowMargin = 10;
+        slice.columns = 4;
+        slice.rows = 4;
+        slice.columnMargin = 5;
+        slice.rowMargin = 10;
 
         var wedges = [];
 
@@ -120,10 +120,10 @@ $(function () {
             wedges.push(wedge);
         }
 
-        box.processCell = function (inner, column, row) {
+        slice.processCell = function (inner, column, row) {
 
-            inner.color.red = Math.floor((column * 255) / (box.columns - 1));
-            inner.color.blue = Math.floor((row * 255) / (box.rows - 1));
+            inner.color.red = Math.floor((column * 255) / (slice.columns - 1));
+            inner.color.blue = Math.floor((row * 255) / (slice.rows - 1));
 
             var angle = Math.floor(Math.max(10, Math.random() * 180));
             var wedge = inner.child(inner.name + ' wedge 1').setDrawType('wedge').setColor(0,0,0);
@@ -147,7 +147,7 @@ $(function () {
             _save_wedge(wedge3);
         };
 
-        box.setRowHeight = function (params) {
+        slice.setRowHeight = function (params) {
             var baseHeight = params.rowHeight;
             if (params.row % 2) {
                 return baseHeight * 1.5;
@@ -156,7 +156,7 @@ $(function () {
             }
         };
 
-        box.setColumnWidth = function (params) {
+        slice.setColumnWidth = function (params) {
             var width, baseWidth = params.columnWidth;
             var bonus = baseWidth * 0.8;
             if (params.column == 1) {
@@ -168,10 +168,10 @@ $(function () {
             return width;
         };
 
-        box.draw();
+        slice.draw();
 
 
-        var labelBox = new Partition.Slice('grid box', {width: 800, height: 300},
+        var labelBox = new Partition.Slice('grid slice', {width: 800, height: 300},
                 $('#draw-area2'), engine).setDrawType('none').setColor(128, 128, 128);
         labelBox.drawAttrs.opacity = 0.5;
 
@@ -193,21 +193,21 @@ $(function () {
     (function () {
         var engine = Partition.engines.raphael($('#draw-area3')[0]);
 
-        var box = new Partition.Slice('grid box', {width: 300, height: 300, drawAttrs: {fill: 'red'}},
+        var slice = new Partition.Slice('grid slice', {width: 300, height: 300, drawAttrs: {fill: 'red'}},
                 $('#draw-area2'), engine).setDrawType('grid');
 
-        box.columns = 5;
-        box.rows = 5;
-        box.columnMargin = 10;
-        box.rowMargin = 10;
+        slice.columns = 5;
+        slice.rows = 5;
+        slice.columnMargin = 10;
+        slice.rowMargin = 10;
 
-        box.processCell = function (inner, column, row) {
+        slice.processCell = function (inner, column, row) {
 
             inner.color.red = Math.floor((column * 255) / 4);
             inner.color.blue = Math.floor((row * 255) / 4);
         };
 
-        box.draw();
+        slice.draw();
 
     })();
 
@@ -215,15 +215,15 @@ $(function () {
 
         var engine = Partition.engines.raphael($('#draw-anchor-demo')[0]);
 
-        var box = new Partition.Slice('grid box', {width: 300, height: 300, drawAttrs: {fill: 'red'}},
+        var slice = new Partition.Slice('grid slice', {width: 300, height: 300, drawAttrs: {fill: 'red'}},
                 $('#draw-area2'), engine).setDrawType('grid');
 
-        box.columns = 3;
-        box.rows = 3;
-        box.columnMargin = 10;
-        box.rowMargin = 10;
+        slice.columns = 3;
+        slice.rows = 3;
+        slice.columnMargin = 10;
+        slice.rowMargin = 10;
 
-        box.processCell = function (cell, row, column) {
+        slice.processCell = function (cell, row, column) {
             cell.drawAttrs['stroke-width'] = 1;
             cell.setStrokeColor(0,255,0);
 
@@ -290,10 +290,10 @@ $(function () {
                     break;
             }
 
-            box.child(inner.name + ' text').setDrawType('text').setAnchor(inner.anchor).text = inner.anchor;
+            slice.child(inner.name + ' text').setDrawType('text').setAnchor(inner.anchor).text = inner.anchor;
         };
 
-        box.draw();
+        slice.draw();
 
     })();
 

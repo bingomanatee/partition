@@ -211,25 +211,17 @@ Partition.blend = (function () {
 	return function (box1, box2, ms, easing, callback) {
 		if (_DEBUG) console.log('blending ', box1.name, ' with ', box2.name, ' over ', ms, ' easing ', easing);
 
-	//	var tempPaper = Raphael(box1.parent);
-
 		if (_DEBUG) console.log('blending ', box1.name, 'to', box2.name);
 
 		var box1elements = _getElements(box1);
 
-	//	box2.setDrawEngine(tempPaper);
 		box2.draw();
 
 		var box2elements = _getElements(box2);
         box2.undraw();
 
-	//	tempPaper.clear();
-		//box2.setDrawEngine(box1.draw_engine);
-
 		var commonKeys = _.intersection(_.keys(box1elements), _.keys(box2elements));
 		var oldKeys = _.difference(_.keys(box1elements), _.keys(box2elements));
-
-		//console.log('blending ', box1elements, 'and', box2elements, ' keys: ', commonKeys);
 
 		var doneOnce = false;
 		function onDone() {
@@ -836,7 +828,7 @@ Partition.blend = (function () {
         this.name = name;
         this._children = [];
         this.parent = parent;
-        this.draw_engine = draw_engine ? draw_engine: parent ? parent.draw_engine : null;
+        this.draw_engine = draw_engine ? draw_engine : parent ? parent.draw_engine : null;
         this.marginDim = new Partition.Dimension(this.margin);
         this.paddingDim = new Partition.Dimension(this.padding)
     }
@@ -861,7 +853,8 @@ Partition.blend = (function () {
             return out
         }, "", this)
     }, addPoint: function (type, params) {
-        this.points.push(Partition.utils.point(type, params, this))
+        this.points.push(Partition.utils.point(type, params, this));
+        return this;
     }, getPath: function () {
         var out = "";
         if (this.parent && this.parent.getPath) {
@@ -964,6 +957,12 @@ Partition.blend = (function () {
             this._computeStroke()
         }
         return _.extend({"stroke-width": 0, fill: "black"}, this.drawAttrs || {})
+    }, setStrokeWidth: function (n) {
+        if (!n) n = 0;
+        this.drawAttrs['stroke-width'] = n;
+        return this;
+    }, getStrokeWidth: function () {
+        return this.drawAttrs['stroke-width'] ? this.drawAttrs['stroke-width'] : 0;
     }, setMargin: function (p) {
         this.marginDim = new Partition.Dimension(p);
         return this
@@ -1012,7 +1011,7 @@ Partition.blend = (function () {
         this.strokeColor.blue = b;
         return this
     }, setDrawType: function (type) {
-        if (!(Partition.draw[type] ||  this.draw_engine[type])) {
+        if (!(Partition.draw[type] || this.draw_engine[type])) {
             console.log('type:', type, 'draw: ', Partition.draw, 'engine:', this.draw_engine);
             throw new Error("bad draw type " + type)
         }
@@ -1025,7 +1024,7 @@ Partition.blend = (function () {
             child.undraw()
         })
     }, draw: function (draw_engine) {
-        if (this._drawn){
+        if (this._drawn) {
             throw new Error('attempting to draw the same shape twice: ' + this.getPath());
         }
 
@@ -1034,20 +1033,23 @@ Partition.blend = (function () {
             this.draw_engine = draw_engine
         }
 
-        if (!this.draw_engine){
+        if (!this.draw_engine) {
             throw new Error('slice has no draw engine: ' + this.getPath());
         }
+
+        this.draw_engine.trigger('beforeDraw', this);
         this._computeFill();
         if (this.drawAttrs["stroke-width"]) {
             this._computeStroke()
         }
         if (Partition.draw[this.drawType]) {
             Partition.draw[this.drawType](this)
-        } else if (this.draw_engine[this.drawType]){
+        } else if (this.draw_engine[this.drawType]) {
             this.draw_engine[this.drawType](this);
         } else {
             throw new Error("cannot find drawType " + this.drawType)
         }
+        this.draw_engine.trigger('afterDraw', this);
         this._drawn = true;
         _.each(this._children, function (child) {
             child.draw(this.draw_engine)
@@ -1170,6 +1172,7 @@ Partition.utils.point = (function () {
 
 	var _DEBUG = false;
 	var _cell_name_template = _.template('<%= name %> row <%= row %> column <%= column %>');
+    var _DEBUG_CELL_STATS = true;
 
 	return function (box) {
 		var rect = box.rect(true);
@@ -1203,6 +1206,9 @@ Partition.utils.point = (function () {
 		_.each(_.range(0, columns), function (column) {
 			var params = {column: column, columns : columns, rows: rows, columnWidth: columnWidth, columnMarginWidth: columnMarginWidth, rect: rect};
 			var width = box.setColumnWidth ? box.setColumnWidth(params) : columnWidth;
+            if(_.isString(width)){
+                width = Partition.utils.scale(width, rect.width);
+            }
 			params.width = width;
 			var columnLeftMargin = box.setColumnMargin ? box.setColumnMargin(params) : columnMarginWidth;
 			var totalRowTopMargin = 0;
@@ -1210,18 +1216,25 @@ Partition.utils.point = (function () {
 			_.each(_.range(0, rows), function (row) {
 				params = {row: row, columns : columns, rows: rows, rowHeight: rowHeight, rect: rect, rowMarginHeight: rowMarginHeight};
 				var height = box.setRowHeight ? box.setRowHeight(params) : rowHeight;
+                if(_.isString(height)){
+                    height = Partition.utils.scale(height, rect.height);
+                }
 				params.height = height;
 				var rowTopMargin = box.setRowMargin ? box.setRowMargin(params) : rowMarginHeight;
 
 				var cell = box.child(cell_name_template({name: box.name, row: row, column: column}))
-					.setLeftMargin(totalColumnLeftMargin).setTopMargin(totalRowTopMargin).setWidth(width).setHeight(height).setDrawType('rect');
+					.setLeftMargin(totalColumnLeftMargin)
+                    .setTopMargin(totalRowTopMargin)
+                    .setWidth(width)
+                    .setHeight(height)
+                    .setDrawType('rect');
 
 				if (box.processCell) {
 					box.processCell(cell, column, row);
                 }
 
-				if (_DEBUG || box.debug) {
-					/*console.log('cell specs: ', {
+				if (_DEBUG_CELL_STATS || box.debug) {
+					console.log('cell specs: ', {
 						name: cell.name,
 						height: height,
 						width: width,
@@ -1229,7 +1242,7 @@ Partition.utils.point = (function () {
 						columnLeftMargin: columnLeftMargin,
 						totalColumnLeftMargin: totalColumnLeftMargin,
 						totalRowTopMargin: totalRowTopMargin
-					});*/
+					});
 					console.log('cell ', cell.getTitle(), '  rect: ', cell.rect().toString());
 				}
 
@@ -1306,9 +1319,9 @@ Partition.graphs.bar = (function () {
 
     function Engine(element) {
         this.setElement(element);
-        if (this.events){
-            _.extend(this, Backbone.Events);
-            _.each(this.events, function(handler, name){
+        _.extend(this, Backbone.Events);
+        if (this.events) {
+            _.each(this.events, function (handler, name) {
                 this.on(name, handler, this);
             }, this);
         }
@@ -1317,13 +1330,13 @@ Partition.graphs.bar = (function () {
     function _makeSVGcrisp(node) {
         var det = Partition.browserDetect();
         if (!(det.browser == "Explorer" && det.browser.version <= 8)) {
-             node.node.setAttribute("style", 'shape-rendering: crispEdges')
+            node.node.setAttribute("style", 'shape-rendering: crispEdges')
         }
     }
 
     Engine.prototype = {
 
-        setElement: function(element){
+        setElement: function (element) {
             throw new Error('must implement set_element');
         },
 
@@ -1372,7 +1385,7 @@ Partition.graphs.bar = (function () {
         make_engine: function (mixin) {
 
             var new_engine = function (element) {
-                this.setElement(element);
+                Engine.call(this, element);
             };
 
             _.extend(new_engine.prototype, Engine.prototype);
@@ -1383,14 +1396,23 @@ Partition.graphs.bar = (function () {
 
         raphael_mixin: {
             events: {
-                draw: function(slice){
-                    _makeSVGcrisp(slice.element);
+                afterDraw: function (slice) {
+                    if (slice.element) _makeSVGcrisp(slice.element);
                 }
             }
 
         },
 
-        canvas_mixin: {}
+        canvas_mixin: {
+            events: {
+                'afterDraw': function (slice) {
+                    console.log('canvas afterDraw');
+                    slice.draw_engine.stage.update();
+                }
+            }
+
+
+        }
 
     };
 })();;Partition.engines.raphael_mixin.circle = (function () {
@@ -1416,19 +1438,33 @@ Partition.graphs.bar = (function () {
 	}
 
 })();;Partition.engines.raphael_mixin.path = (function () {
-	var _DEBUG = true;
 
-	return function (box) {
-		var path = box.getPoints();
-		if (_DEBUG) console.log('path... ', path);
-		box.element = box.draw_engine.polygon(path, box.getDrawAttrs());
-	};
+    function _polygon(box, engine) {
+        var rect = box.rect();
+        return engine.paper
+            .path(
+                _.reduce(box.points, function (out, point) {
+                    return out + point.toString(rect);
+                }, ''));
+    }
+
+    return function (box) {
+        var _DEBUG = false;
+
+        var rect = box.rect();
+
+        box.element = _polygon(box, this);
+        if (_DEBUG) console.log('box: ', box.name, ':', box, 'rect: ', rect);
+        box.element.attr(_.extend({'stroke-width': 0, fill: 'black', title: box.getTitle() }, box.drawAttrs || {}));
+    }
+
 })();;Partition.engines.raphael_mixin.rect =  function(box){
 	var _DEBUG = false;
 	var rect = box.rect();
 	box.element = this.paper.rect(rect.left, rect.top, rect.width, rect.height);
-	if (_DEBUG) console.log('box: ', box.name, ':',  box, 'rect: ', rect);
-	box.element.attr(_.extend({'stroke-width': 0, fill: 'black', title: box.name}, box.drawAttrs || {}));
+    var box_attrs = _.extend({'stroke-width': 0, fill: 'black', title: box.name}, box.drawAttrs);
+	if (_DEBUG) console.log('box: ', box.name, ':',  box, 'rect: ', rect, 'attrs: ', box_attrs);
+	box.element.attr(box_attrs);
 
 };;Partition.engines.raphael_mixin.text = function (box) {
 	var _DEBUG = false;
@@ -1576,4 +1612,294 @@ Partition.graphs.bar = (function () {
     }
     
     
-})()
+})();Partition.engines.canvas_mixin.circle = (function () {
+    var _DEBUG = false;
+
+    return function (box) {
+        var rect = box.rect();
+        var center = rect.center();
+        var radius = rect.radius(box.radMode || '');
+
+        attrs = box.drawAttrs || {};
+
+        box.shape = new createjs.Shape();
+
+        box.shape.graphics.beginFill(attrs.fill)
+            .drawCircle(center.x, center.y, radius)
+            .endFill();
+
+        if (attrs['stroke-width']) {
+            box.shape.graphics.beginStroke(attrs.stroke).setStrokeStyle(attrs['stroke-width'])
+                .drawCircle(center.x, center.y, radius)
+                .endStroke();
+        }
+
+        this.stage.addChild(box.shape);
+
+    }
+
+})();;Partition.engines.canvas_mixin.path = (function () {
+    var _DEBUG = true;
+
+    function _polygon(box) {
+        var x, y;
+
+        _.forEach(box.points, function (point) {
+            switch (point.type) {
+                case 'M':
+                    x = point.getX(), y = point.getY();
+                    box.shape.graphics.moveTo(x, y);
+                    break;
+
+                case 'L':
+                    x = point.getX(), y = point.getY();
+                    box.shape.graphics.lineTo(x, y);
+                    break;
+
+                case 'H':
+                    x = point.getX();
+                    box.shape.graphics.lineTo(x, y);
+                    break;
+
+                case 'V':
+                    y = point.getY();
+                    box.shape.graphics.lineTo(x, y);
+                    break;
+
+                case 'Q':
+                    x = point.getX(), y = point.getY();
+                    box.shape.graphics.quadraticCurveTo(x, y, point.getX2(), point.getY2());
+                    break;
+
+                default:
+                    throw new Error('unhandled point type: ' + point.type);
+
+            }
+        });
+    }
+
+    return function (box) {
+        var path = box.getPoints();
+        if (_DEBUG) console.log('path... ', path);
+
+       box.shape = new createjs.Shape();
+        box.shape.graphics.beginFill(attrs.fill);
+        _polygon(box);
+        box.shape.graphics.endFill();
+
+        if (attrs['stroke-width']) {
+            box.shape.graphics.beginStroke(attrs.stroke).setStrokeStyle(attrs['stroke-width'])
+            _polygon(box);
+            box.shape.graphics.endStroke();
+        }
+        
+        this.stage.addChild(box.shape);
+    };
+})();;Partition.engines.canvas_mixin.rect = function (box) {
+    var _DEBUG = false;
+
+    var rect = box.rect(),
+        attrs = box.drawAttrs || {};
+
+    var shape = new createjs.Shape();
+
+    shape.graphics.beginFill(attrs.fill)
+        .rect(rect.left, rect.top, rect.width, rect.height)
+        .endFill();
+
+    if (attrs['stroke-width']) {
+        shape.graphics.beginStroke(attrs.stroke).setStrokeStyle(attrs['stroke-width']).
+            rect(rect.left, rect.top, rect.width, rect.height)
+            .endStroke();
+    }
+
+    this.stage.addChild(shape);
+
+};;Partition.engines.canvas_mixin.text = function (box) {
+    var _DEBUG = false;
+
+    var rect = box.rect();
+
+    var fontHeight = box.drawAttrs['font-size'] || 12;
+    var fontAttrs = box.drawAttrs['font-family'] || 'Arial';
+    box.drawAttrs['font-size'] = fontHeight;
+    var bigHeightDiff = rect.height - fontHeight;
+    fontHeight *= 0.6;
+    var heightDiff = rect.height - fontHeight;
+
+    var paper = this.paper;
+
+    var x, y, align;
+    switch (box.anchor) {
+
+        case 'TL':
+            x = rect.left;
+            y = rect.top + fontHeight;
+            align = 'left';
+            break;
+
+        case 'T':
+            x = rect.left + rect.width / 2;
+            y =  rect.top + fontHeight;
+            align="center";
+            break;
+
+        case 'TR':
+            x = rect.right;
+            y = rect.top + fontHeight;
+            align = 'right';
+            break;
+
+        case 'L':
+            x = rect.left;
+            y = rect.top + (fontHeight + heightDiff) / 2;
+            align = 'left';
+            break;
+
+        case 'C':
+            x = rect.left + rect.width / 2;
+            y = rect.top + (fontHeight + heightDiff) / 2;
+            align = 'center';
+            break;
+
+        case 'R':
+            x = rect.right;
+            y = rect.top + (fontHeight + heightDiff) / 2;
+            align = 'right';
+
+            break;
+
+        case 'BL':
+            x = rect.left;
+            y = rect.bottom - fontHeight;
+            align = 'left';
+
+            break;
+
+        case 'B':
+            x = rect.left + rect.width / 2;
+            y = rect.bottom - fontHeight;
+            align = 'center';
+
+            break;
+
+        case 'BR':
+            x = rect.right;
+            y = rect.bottom - fontHeight;
+            align = 'right';
+            break;
+
+        default:
+            throw new Error('no anchor ' + box.anchor);
+    }
+
+    var text = new createjs.Text(box.text, fontAttrs, box.fill);
+    text.x = x;
+    text.y = y;
+    text.textAlign = align;
+
+    this.stage.addChild(text);
+};;Partition.engines.canvas_mixin.wedge = (function () {
+
+    var _DEBUG = false;
+
+    var rad = Math.PI / 180;
+
+    function _wedge(box) {
+        var rect = box.rect();
+        var center = rect.center();
+        var r = rect.radius();
+        var startAngle = box.hasOwnProperty('startAngle') ? box.startAngle : 0
+            , endAngle = box.hasOwnProperty('endAngle') ? box.endAngle : 360;
+
+        var p1 = rect.radialPoint(-startAngle);
+        var p2 = rect.radialPoint(endAngle);
+
+        box.shape.graphics.moveTo(center.x, center.y);
+        box.shape.graphics.lineTo(p2.x, p2.y);
+        box.shape.graphics.arc(center.x, center.y, r, endAngle * -rad, startAngle * -rad);
+        box.shape.graphics.lineTo(p1.x, p1.y);
+        box.shape.graphics.closePath();
+    }
+
+    return function (box) {
+        var path = box.getPoints();
+        if (_DEBUG) console.log('path... ', path);
+
+
+        box.shape = new createjs.Shape();
+
+        box.shape.graphics.beginFill(attrs.fill);
+        _wedge(box);
+        box.shape.graphics.endFill();
+
+        if (attrs['stroke-width']) {
+            box.shape.graphics.beginStroke(attrs.stroke).setStrokeStyle(box.getStrokeWidth());
+            _wedge(box);
+            box.shape.graphics.endStroke();
+        }
+
+        this.stage.addChild(box.shape);
+    }
+
+
+})();;(function(){
+
+    var _DEBUG_UNDRAW = false;
+
+    Partition.engines.canvas_mixin.undraw = function(box){
+        if (_DEBUG_UNDRAW) {
+            console.log("undrawing ", box.name, "element", box.element)
+        }
+        if (box.element) {
+            box.element.attr("opacity", 0);
+            box.element.hide();
+            box.element.remove();
+            delete box.element
+        } else {
+            if (_DEBUG_UNDRAW)console.log(" ... no element to undraw")
+        }
+    }
+    
+    
+})();(function(){
+
+    var _DEBUG_UNDRAW = false;
+
+    var _canvas = _.template('<canvas width="<%= width %>" height="<%= height %>"></canvas>');
+
+    Partition.engines.canvas_mixin.setElement = function(element, width, height){
+        if (_.isString(element)){
+            element = $('body').find(element)[0];
+        }
+        if (!element instanceof HTMLElement){
+            throw new Error('engine must be passed domElement or css to dom element')
+        }
+        console.log('canvas element: ', element);
+        var j = $(element);
+
+        if (!j.is('canvas')){
+            j.html(_canvas({width: j.width(), height: j.height()}));
+            element = j.find('canvas')[0];
+        }
+
+        if (arguments.length < 2){
+            width = $(element).width();
+            height = $(element).height();
+        }
+
+        this.element = element;
+
+        this.stage = new createjs.Stage(this.element);
+    }
+    
+    
+})();(function () {
+
+    Partition.engines.canvas_mixin.clear = function () {
+        this.stage.removeAllChildren();
+        this.stage.clear();
+    }
+
+
+})();

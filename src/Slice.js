@@ -22,7 +22,7 @@ Partition.Slice = function () {
         this.name = name;
         this._children = [];
         this.parent = parent;
-        this.draw_engine = draw_engine ? draw_engine: parent ? parent.draw_engine : null;
+        this.draw_engine = draw_engine ? draw_engine : parent ? parent.draw_engine : null;
         this.marginDim = new Partition.Dimension(this.margin);
         this.paddingDim = new Partition.Dimension(this.padding)
     }
@@ -47,7 +47,8 @@ Partition.Slice = function () {
             return out
         }, "", this)
     }, addPoint: function (type, params) {
-        this.points.push(Partition.utils.point(type, params, this))
+        this.points.push(Partition.utils.point(type, params, this));
+        return this;
     }, getPath: function () {
         var out = "";
         if (this.parent && this.parent.getPath) {
@@ -150,6 +151,12 @@ Partition.Slice = function () {
             this._computeStroke()
         }
         return _.extend({"stroke-width": 0, fill: "black"}, this.drawAttrs || {})
+    }, setStrokeWidth: function (n) {
+        if (!n) n = 0;
+        this.drawAttrs['stroke-width'] = n;
+        return this;
+    }, getStrokeWidth: function () {
+        return this.drawAttrs['stroke-width'] ? this.drawAttrs['stroke-width'] : 0;
     }, setMargin: function (p) {
         this.marginDim = new Partition.Dimension(p);
         return this
@@ -198,7 +205,7 @@ Partition.Slice = function () {
         this.strokeColor.blue = b;
         return this
     }, setDrawType: function (type) {
-        if (!(Partition.draw[type] ||  this.draw_engine[type])) {
+        if (!(Partition.draw[type] || this.draw_engine[type])) {
             console.log('type:', type, 'draw: ', Partition.draw, 'engine:', this.draw_engine);
             throw new Error("bad draw type " + type)
         }
@@ -211,7 +218,7 @@ Partition.Slice = function () {
             child.undraw()
         })
     }, draw: function (draw_engine) {
-        if (this._drawn){
+        if (this._drawn) {
             throw new Error('attempting to draw the same shape twice: ' + this.getPath());
         }
 
@@ -220,20 +227,23 @@ Partition.Slice = function () {
             this.draw_engine = draw_engine
         }
 
-        if (!this.draw_engine){
+        if (!this.draw_engine) {
             throw new Error('slice has no draw engine: ' + this.getPath());
         }
+
+        this.draw_engine.trigger('beforeDraw', this);
         this._computeFill();
         if (this.drawAttrs["stroke-width"]) {
             this._computeStroke()
         }
         if (Partition.draw[this.drawType]) {
             Partition.draw[this.drawType](this)
-        } else if (this.draw_engine[this.drawType]){
+        } else if (this.draw_engine[this.drawType]) {
             this.draw_engine[this.drawType](this);
         } else {
             throw new Error("cannot find drawType " + this.drawType)
         }
+        this.draw_engine.trigger('afterDraw', this);
         this._drawn = true;
         _.each(this._children, function (child) {
             child.draw(this.draw_engine)

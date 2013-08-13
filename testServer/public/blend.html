@@ -46,12 +46,12 @@
 
                 var maxValue = _.max(_.pluck(data, 'value'));
 
-           bars.processCell = function (box, column, row) {
+           bars.processCell = function (slice, column, row) {
                     var dataItem = data[column];
-                    box.name = dataItem.name;
-                    box.setDrawType('none').setHeight((dataItem.value * 100 / maxValue) + '%').setAnchor('BL');
-                    box.child('bar').setWidth(120).setHeight('100%').setDrawType('rect').setColor(r, g, b);
-                    box.child('label', {text: dataItem.name}).setDrawType('text').setColor(0,0,0).setAnchor('BL').setBottomMargin(-20);                         dataItem.name;
+                    slice.name = dataItem.name;
+                    slice.setDrawType('none').setHeight((dataItem.value * 100 / maxValue) + '%').setAnchor('BL');
+                    slice.child('bar').setWidth(120).setHeight('100%').setDrawType('rect').setColor(r, g, b);
+                    slice.child('label', {text: dataItem.name}).setDrawType('text').setColor(0,0,0).setAnchor('BL').setBottomMargin(-20);                         dataItem.name;
                 };
 
                 return root;
